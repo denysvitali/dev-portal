@@ -75,9 +75,9 @@ func (s *Server) migrateOrFail(db *gorm.DB, model interface{}) {
 
 func (s *Server) setupORM(db *gorm.DB) {
 	s.migrateOrFail(db, &models.UserDetails{})
+	s.migrateOrFail(db, &models.TopicAction{})
 	s.migrateOrFail(db, &models.User{})
 	s.migrateOrFail(db, &models.Topic{})
-	s.migrateOrFail(db, &models.TopicAction{})
 	s.migrateOrFail(db, &models.Action{})
 	s.migrateOrFail(db, &models.Comment{})
 	_ = db.SetupJoinTable(&models.Topic{}, "TopicActions", &models.TopicAction{})
@@ -119,6 +119,13 @@ func (s *Server) initData(db *gorm.DB) {
 			Author: adminUser,
 			Title:  "First Topic",
 			Body:   "Hello world!",
+		})
+		db.Commit()
+
+		db.Create(&models.Topic{
+			Author: adminUser,
+			Title:  "Second Topic",
+			Body:   "This is another more interesting topic:\nwhat do you think?",
 		})
 		db.Commit()
 	}

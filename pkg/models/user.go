@@ -7,10 +7,10 @@ import (
 type User struct {
 	ID        uint      `gorm:"primaryKey,autoIncrement" json:"id"`
 	Username  string    `gorm:"index" json:"username"`
-	GivenName string    `json:"given_name"`
-	LastName  string    `json:"last_name"`
+	GivenName string    `json:"givenName"`
+	LastName  string    `json:"lastName"`
 	Admin     bool      `gorm:"index" json:"admin"`
-	CreatedAt time.Time `json:"created_at"`
+	CreatedAt time.Time `json:"createdAt"`
 	LastLogin time.Time `json:"-"`
 	Deleted   bool      `gorm:"index" json:"-"`
 

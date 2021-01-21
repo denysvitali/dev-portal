@@ -5,6 +5,7 @@ import (
 	"github.com/denysvitali/dev-portal/pkg/server/app"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
+	"math/rand"
 	"net/http"
 	"strconv"
 )
@@ -44,9 +45,9 @@ func getTopic(a *app.App) gin.HandlerFunc {
 	}
 }
 
-func getUpvotesByTopic(id uint, app *app.App) (uint, error) {
+func getLikesByTopic(id uint, app *app.App) (uint, error) {
 	var upvotes int64 = 0
-	err := app.Db.Table("topic_actions").Joins("JOIN actions ON topic_actions.action_id = actions.id").Group("topic_id").Group("actions.id").Where("topic_id=? AND Actions.name=?", id, "upvote").Count(&upvotes).Error
+	err := app.Db.Table("topic_actions").Joins("JOIN actions ON topic_actions.action_id = actions.id").Group("topic_id").Group("actions.id").Where("topic_id=? AND Actions.name=?", id, "like").Count(&upvotes).Error
 	return uint(upvotes), err
 }
 
@@ -85,15 +86,11 @@ func getTopics(app *app.App) func(context *gin.Context) {
 
 func enrichTopic(t *models.Topic, app *app.App) error {
 	var err error
-	t.Upvotes, err = getUpvotesByTopic(t.ID, app)
+	t.Likes, err = getLikesByTopic(t.ID, app)
 	if err != nil {
 		return err
 	}
-	t.Downvotes, err = getDownvotesByTopic(t.ID, app)
-	if err != nil {
-		return err
-	}
-	
+	t.Liked = rand.Intn(2) == 1 // TODO: change to real value when we implement sessions
 	t.CommentsCount, err = getCommentsCountByTopic(t.ID, app)
 	
 	return nil
