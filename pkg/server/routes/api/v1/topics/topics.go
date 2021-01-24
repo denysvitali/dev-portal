@@ -47,14 +47,12 @@ func getTopic(a *app.App) gin.HandlerFunc {
 
 func getLikesByTopic(id uint, app *app.App) (uint, error) {
 	var upvotes int64 = 0
-	err := app.Db.Table("topic_actions").Joins("JOIN actions ON topic_actions.action_id = actions.id").Group("topic_id").Group("actions.id").Where("topic_id=? AND Actions.name=?", id, "like").Count(&upvotes).Error
+	err := app.Db.Table("topic_actions").Joins(
+		"JOIN actions ON topic_actions.action_id = actions.id",
+	).Group("topic_id").Group("actions.id").Where(
+		"topic_id=? AND Actions.name=?", id, "like",
+	).Count(&upvotes).Error
 	return uint(upvotes), err
-}
-
-func getDownvotesByTopic(id uint, app *app.App) (uint, error) {
-	var downvotes int64 = 0
-	err := app.Db.Table("topic_actions").Joins("JOIN actions ON topic_actions.action_id = actions.id").Group("topic_id").Group("actions.id").Where("topic_id=? AND Actions.name=?", id, "downvote").Count(&downvotes).Error
-	return uint(downvotes), err
 }
 
 func getCommentsCountByTopic(id uint, app *app.App) (uint, error) {
@@ -62,7 +60,6 @@ func getCommentsCountByTopic(id uint, app *app.App) (uint, error) {
 	err := app.Db.Table("comments").Where("topic_id=?", id).Count(&comments).Error
 	return uint(comments), err
 }
-
 
 func getTopics(app *app.App) func(context *gin.Context) {
 	return func(context *gin.Context) {
@@ -92,6 +89,6 @@ func enrichTopic(t *models.Topic, app *app.App) error {
 	}
 	t.Liked = rand.Intn(2) == 1 // TODO: change to real value when we implement sessions
 	t.CommentsCount, err = getCommentsCountByTopic(t.ID, app)
-	
+
 	return nil
 }

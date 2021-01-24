@@ -1,0 +1,8 @@
+base_url: http://127.0.0.1:8080
+listen_addr: ":8080"
+oidc:
+  auth_url: https://auth.denv.it/oauth/authorize
+  token_url: https://auth.denv.it/oauth/token
+  user_info_url: https://auth.denv.it/userinfo
+  client_id: XXX
+  client_secret: YYY

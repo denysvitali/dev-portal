@@ -4,8 +4,10 @@ import (
 	"github.com/denysvitali/dev-portal/pkg/models"
 	"github.com/denysvitali/dev-portal/pkg/server/app"
 	"github.com/denysvitali/dev-portal/pkg/server/routes/api"
-	"github.com/gin-gonic/gin"
 	"github.com/gin-contrib/cors"
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-contrib/sessions/cookie"
+	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -18,12 +20,14 @@ import (
 type Server struct {
 	listenAddr string
 	log        *logrus.Logger
+	config     *app.Config
 }
 
-func New(listenAddr string, logger *logrus.Logger) Server {
+func New(listenAddr string, logger *logrus.Logger, config *app.Config) Server {
 	return Server{
 		log:        logger,
 		listenAddr: listenAddr,
+		config:     config,
 	}
 }
 
@@ -31,15 +35,17 @@ func (s *Server) Start() {
 	r := gin.Default()
 
 	corsConfig := cors.DefaultConfig()
-	corsConfig.AllowOrigins = []string{"http://127.0.0.1:8080"}
+	corsConfig.AllowOrigins = []string{"http://127.0.0.1:8081"}
 	corsConfig.AllowCredentials = true
 	corsConfig.AddAllowMethods("OPTIONS")
 	r.Use(cors.New(corsConfig))
+	store := cookie.NewStore([]byte("secret"))
+	r.Use(sessions.Sessions("session", store))
 
 	newLogger := logger.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
 		logger.Config{
-			SlowThreshold: time.Second,   // Slow SQL threshold
+			SlowThreshold: time.Second,  // Slow SQL threshold
 			LogLevel:      logger.Error, // Log level
 			Colorful:      true,         // Disable color
 		},
@@ -47,7 +53,7 @@ func (s *Server) Start() {
 	db, err := gorm.Open(postgres.Open("host=localhost user=postgres password=postgres"), &gorm.Config{
 		Logger: newLogger,
 	})
-	
+
 	if err != nil {
 		s.log.Fatalf("unable to open db: %v", err)
 	}
@@ -57,6 +63,7 @@ func (s *Server) Start() {
 	app := app.App{
 		Db:  db,
 		Log: s.log,
+		Config: s.config,
 	}
 
 	setupRoutes(r, &app)
@@ -103,12 +110,12 @@ func (s *Server) initData(db *gorm.DB) {
 			Deleted:   false,
 			UserDetails: models.UserDetails{
 				Department: "A-B-C",
-				Email:      "admin@login.dev",
+				Email:      "admin@auth.dev",
 			},
 		}
 		transaction.Create(&adminUser)
 		transaction.Save(&adminUser)
- 		transaction.Commit()
+		transaction.Commit()
 	}
 
 	var topicsCount int64

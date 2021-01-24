@@ -8,4 +8,5 @@ import (
 type App struct {
 	Db *gorm.DB
 	Log *logrus.Logger
+	Config *Config
 }
